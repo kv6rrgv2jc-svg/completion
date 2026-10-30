@@ -107,6 +107,10 @@ def import_sheet(csv_path: str, db_path: str, uploaded_at: str | None = None) ->
                     1 if payload["can_pick"] else 0,
                 ),
             )
+        # Each imported order is a complete snapshot of its current items.
+        # Replace only orders present in this upload, in the same transaction.
+        for order_id in orders:
+            cursor.execute("DELETE FROM order_items WHERE order_id = ?", (order_id,))
         for item in items:
             cursor.execute(
                 """
